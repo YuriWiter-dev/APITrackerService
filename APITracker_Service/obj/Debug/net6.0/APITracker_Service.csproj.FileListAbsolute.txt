@@ -1,0 +1,5 @@
+C:\Users\Yuri\source\repos\APITracker\APITracker_Service\APITracker_Service\obj\Debug\net6.0\APITracker_Service.csproj.AssemblyReference.cache
+C:\Users\Yuri\source\repos\APITracker\APITracker_Service\APITracker_Service\obj\Debug\net6.0\APITracker_Service.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\Yuri\source\repos\APITracker\APITracker_Service\APITracker_Service\obj\Debug\net6.0\APITracker_Service.AssemblyInfoInputs.cache
+C:\Users\Yuri\source\repos\APITracker\APITracker_Service\APITracker_Service\obj\Debug\net6.0\APITracker_Service.AssemblyInfo.cs
+C:\Users\Yuri\source\repos\APITracker\APITracker_Service\APITracker_Service\obj\Debug\net6.0\APITracker_Service.csproj.CoreCompileInputs.cache
