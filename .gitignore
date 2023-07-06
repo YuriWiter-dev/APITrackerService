@@ -349,3 +349,4 @@ MigrationBackup/
 
 # Ionide (cross platform F# VS Code tools) working folder
 .ionide/
+/APITracker_Service/obj/Debug/net7.0/APITracker_Service.csproj.AssemblyReference.cache
