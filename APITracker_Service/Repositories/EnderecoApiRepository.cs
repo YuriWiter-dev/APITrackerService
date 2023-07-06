@@ -27,7 +27,7 @@ public class EnderecoApiRepository : BaseRepositorio, IEnderecoApiRepository
     public async Task Alterar(EnderecoAPI entidade)
     {
         await IniciarTransaction();
-        _context.Entry(entidade).State = EntityState.Modified;
+        _context.Entry(entidade).State = EntityState.Detached;
         await SalvarMudancas();
     }
 

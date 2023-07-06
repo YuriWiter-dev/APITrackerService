@@ -17,6 +17,7 @@ public class EnderecoApiMap : IEntityTypeConfiguration<EnderecoAPI>
         builder.Property(p => p.Endereco).HasMaxLength(200);
 
         builder.Property(p => p.Error)
+            .HasDefaultValue("")
             .HasMaxLength(4000);
 
         builder.Property(p => p.Body).HasMaxLength(4000);

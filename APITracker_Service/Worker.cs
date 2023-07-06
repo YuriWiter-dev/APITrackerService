@@ -12,6 +12,7 @@ using System.Net.Http;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace APITracker_Service
 {
@@ -60,50 +61,57 @@ namespace APITracker_Service
         {
             try
             {
-                IEnumerable<EnderecoAPI> enderecos = await _enderecoApiRepository.BuscarTodos();
-
-                foreach (EnderecoAPI endereco in enderecos)
+                foreach (EnderecoAPI endereco in await _enderecoApiRepository.BuscarTodos())
                 {
-                    using HttpClient client = new();
-
-                    client.Timeout = endereco.TimeOutEmMinutos <= 0 ? TimeSpan.FromSeconds(20) : TimeSpan.FromMinutes(endereco.TimeOutEmMinutos);
-
-                    Stopwatch stopwatch = new();
-                    stopwatch.Start();
-
-                    HttpResponseMessage response = null;
-
-                    if (endereco.Method.Equals(Method.POST))
+                    try
                     {
-                        StringContent json = new(
-                            content: endereco.Body,
-                            encoding: Encoding.UTF8,
-                            mediaType: "application/json");
+                        using HttpClient client = new();
 
-                        response = client.PostAsync(endereco.Endereco, json).Result;
+                        client.Timeout = endereco.TimeOutEmMinutos <= 0 ? TimeSpan.FromSeconds(20) : TimeSpan.FromMinutes(endereco.TimeOutEmMinutos);
+
+                        Stopwatch stopwatch = new();
+                        stopwatch.Start();
+
+                        HttpResponseMessage response = null;
+
+                        if (endereco.Method.Equals(Method.POST))
+                        {
+                            StringContent json = new(
+                                content: endereco.Body,
+                                encoding: Encoding.UTF8,
+                                mediaType: "application/json");
+
+                            response = client.PostAsync(endereco.Endereco, json).Result;
+                        }
+                        else if (endereco.Method.Equals(Method.GET))
+                        {
+                            response = client.GetAsync(endereco.Endereco).Result;
+                        }
+
+                        stopwatch.Stop();
+
+                        TimeSpan duration = stopwatch.Elapsed;
+
+                        HttpStatusCode statusCode = response.StatusCode;
+
+                        string error = string.Empty;
+
+                        if (statusCode == HttpStatusCode.BadRequest || statusCode == HttpStatusCode.InternalServerError)
+                        {
+                            error = response.Content.ReadAsStringAsync().Result;
+                        }
+
+                        endereco.StatusCode = (int)statusCode;
+                        endereco.TimeOutEmMinutos = duration.Seconds;
+                        endereco.Error = string.IsNullOrEmpty(error) ? string.Empty : error;
                     }
-                    else if (endereco.Method.Equals(Method.GET))
+                    catch (Exception ex)
                     {
-                        response = client.GetAsync(endereco.Endereco).Result;
+                        endereco.StatusCode = 500;
+                        endereco.Error = ex.Message;
+                        _email.SendEmail("yuri.lightbase@sebraemg.com.br", "Worker Service", $"E-mail enviado: {DateTimeOffset.Now + ex.Message}");
+                        _applicationLifetime.StopApplication();
                     }
-
-                    stopwatch.Stop();
-
-                    TimeSpan duration = stopwatch.Elapsed;
-
-                    HttpStatusCode statusCode = response.StatusCode;
-
-                    string error = string.Empty;
-
-                    if (statusCode == HttpStatusCode.BadRequest || statusCode == HttpStatusCode.InternalServerError)
-                    {
-                        error = response.Content.ReadAsStringAsync().Result;
-                    }
-
-                    endereco.StatusCode = (int)statusCode;
-                    endereco.TimeOutEmMinutos = duration.Seconds;
-                    endereco.Error = error;
-
                     await _enderecoApiRepository.Alterar(endereco);
                 }
             }
