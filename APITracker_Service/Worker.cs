@@ -53,9 +53,73 @@ namespace APITracker_Service
                 await Realtime();
 
 
-                await Task.Delay(60000, stoppingToken);
+                await Task.Delay(30000, stoppingToken);
             }
         }
+
+        //private async Task Realtime()
+        //{
+        //    try
+        //    {
+        //        foreach (EnderecoAPI endereco in await _enderecoApiRepository.BuscarTodos())
+        //        {
+        //            try
+        //            {
+        //                using HttpClient client = new();
+
+        //                client.Timeout = endereco.TimeOutEmMinutos <= 0 ? TimeSpan.FromSeconds(20) : TimeSpan.FromMinutes(endereco.TimeOutEmMinutos);
+
+        //                Stopwatch stopwatch = new();
+        //                stopwatch.Start();
+
+        //                HttpResponseMessage response = null;
+
+        //                if (endereco.Method.Equals(Method.POST))
+        //                {
+        //                    StringContent json = new(
+        //                        content: endereco.Body,
+        //                        encoding: Encoding.UTF8,
+        //                        mediaType: "application/json");
+
+        //                    response = client.PostAsync(endereco.Endereco, json).Result;
+        //                }
+        //                else if (endereco.Method.Equals(Method.GET))
+        //                {
+        //                    response = client.GetAsync(endereco.Endereco).Result;
+        //                }
+
+        //                stopwatch.Stop();
+
+        //                TimeSpan duration = stopwatch.Elapsed;
+
+        //                HttpStatusCode statusCode = response.StatusCode;
+
+        //                string error = string.Empty;
+
+        //                if (statusCode == HttpStatusCode.BadRequest || statusCode == HttpStatusCode.InternalServerError)
+        //                {
+        //                    error = response.Content.ReadAsStringAsync().Result;
+        //                }
+
+        //                endereco.StatusCode = (int)statusCode;
+        //                endereco.TimeOutEmMinutos = duration.Seconds;
+        //                endereco.Error = string.IsNullOrEmpty(error) ? string.Empty : error;
+        //            }
+        //            catch (Exception ex)
+        //            {
+        //                endereco.StatusCode = 500;
+        //                endereco.Error = ex.Message;
+        //                _email.SendEmail("yuri.lightbase@sebraemg.com.br", "Worker Service", $"E-mail enviado: {DateTimeOffset.Now + ex.Message}");
+        //                _applicationLifetime.StopApplication();
+        //            }
+        //            await _enderecoApiRepository.Alterar(endereco);
+        //        }
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        throw new Exception(ex.Message);
+        //    }
+        //}
 
         private async Task Realtime()
         {
@@ -69,23 +133,22 @@ namespace APITracker_Service
 
                         client.Timeout = endereco.TimeOutEmMinutos <= 0 ? TimeSpan.FromSeconds(20) : TimeSpan.FromMinutes(endereco.TimeOutEmMinutos);
 
-                        Stopwatch stopwatch = new();
-                        stopwatch.Start();
+                        Stopwatch stopwatch = Stopwatch.StartNew();
 
                         HttpResponseMessage response = null;
 
                         if (endereco.Method.Equals(Method.POST))
                         {
                             StringContent json = new(
-                                content: endereco.Body,
+                                content: endereco.Body ?? string.Empty,
                                 encoding: Encoding.UTF8,
                                 mediaType: "application/json");
 
-                            response = client.PostAsync(endereco.Endereco, json).Result;
+                            response = await client.PostAsync(endereco.Endereco, json);
                         }
                         else if (endereco.Method.Equals(Method.GET))
                         {
-                            response = client.GetAsync(endereco.Endereco).Result;
+                            response = await client.GetAsync(endereco.Endereco);
                         }
 
                         stopwatch.Stop();
@@ -98,12 +161,14 @@ namespace APITracker_Service
 
                         if (statusCode == HttpStatusCode.BadRequest || statusCode == HttpStatusCode.InternalServerError)
                         {
-                            error = response.Content.ReadAsStringAsync().Result;
+                            error = await response.Content.ReadAsStringAsync();
                         }
 
                         endereco.StatusCode = (int)statusCode;
-                        endereco.TimeOutEmMinutos = duration.Seconds;
+                        endereco.TimeOutEmMinutos = (int)duration.TotalSeconds;
                         endereco.Error = string.IsNullOrEmpty(error) ? string.Empty : error;
+
+                        await _enderecoApiRepository.Alterar(endereco);
                     }
                     catch (Exception ex)
                     {
@@ -112,7 +177,6 @@ namespace APITracker_Service
                         _email.SendEmail("yuri.lightbase@sebraemg.com.br", "Worker Service", $"E-mail enviado: {DateTimeOffset.Now + ex.Message}");
                         _applicationLifetime.StopApplication();
                     }
-                    await _enderecoApiRepository.Alterar(endereco);
                 }
             }
             catch (Exception ex)
@@ -120,5 +184,6 @@ namespace APITracker_Service
                 throw new Exception(ex.Message);
             }
         }
+
     }
 }

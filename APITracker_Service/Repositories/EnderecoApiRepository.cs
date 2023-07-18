@@ -27,7 +27,7 @@ public class EnderecoApiRepository : BaseRepositorio, IEnderecoApiRepository
     public async Task Alterar(EnderecoAPI entidade)
     {
         await IniciarTransaction();
-        _context.Entry(entidade).State = EntityState.Detached;
+        _context.Entry(entidade);
         await SalvarMudancas();
     }
 
@@ -38,7 +38,7 @@ public class EnderecoApiRepository : BaseRepositorio, IEnderecoApiRepository
 
     public IQueryable<EnderecoAPI> Buscar(Expression<Func<EnderecoAPI, bool>> expression)
     {
-        return _dbSet.Where(expression).AsNoTracking();
+        return _dbSet.Where(expression);
     }
 }
     
